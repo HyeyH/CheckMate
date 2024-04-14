@@ -1,0 +1,20 @@
+: 학습된 모델 내보내기, 불러오기
+이미지 업로드, 수정, 삭제, 전처리, 관리(폴더 사용?)
+모델 학습, 모델 선택, 삭제, 이름 수정
+anomoly detection
+검출시 화면 기능
+
+text add
+
+        # 텍스트 입력 위젯 생성
+        self.item_input = QLineEdit()
+
+        # 아이템 추가 버튼 생성
+        self.add_item_button = QPushButton('Add Model')
+        self.add_item_button.clicked.connect(self.add_item)
+
+def add_item(self):
+        text = self.item_input.text()
+        if text.strip():  # 입력된 텍스트가 공백이 아닌 경우에만 추가
+            self.list_widget.addItem(text)
+            self.item_input.clear()
