@@ -1,3 +1,4 @@
+import subprocess
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QFileDialog, QComboBox
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -46,8 +47,7 @@ class ImageRecognitionDialog(QDialog):
 
     def detect_objects(self):
         # 탐지 버튼을 누르면 탐지 작업을 수행함
-        file_path = self.file_path_label.text().replace("Selected file: ", "")
-        self.file_selected.emit(file_path)
+        self.file_selected.emit(self.file_path_label.text().replace("Selected file: ", ""))
 
 
 class DetectWindow(QDialog):
@@ -122,7 +122,14 @@ class DetectWindow(QDialog):
         print("Testing live video recognition...")
     
     def detect(self):
-        print("Detect Result")
+        file_path = self.image_dialog.file_path_label.text().replace("Selected file: ", "")
+        command = f"python ./yolov5/detect.py --weights ./yolov5/runs/train/{self.model_combo_box.currentText()}/weights/best.pt --conf 0.5 --source {file_path}"
+        try:
+            # shell 명령 실행
+            subprocess.run(command, shell=True)
+            print("Training model...")
+        except Exception as e:
+            print("Error:", e)
 
     def closeEvent(self, event):
         # TrainWindow가 닫힐 때 위치와 크기 정보 저장

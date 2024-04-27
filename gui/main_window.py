@@ -1,3 +1,4 @@
+import subprocess
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QPushButton, QGridLayout, QAction
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
@@ -9,7 +10,15 @@ import sys
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        # yolo 실행에 필요
+        command = f"pip install -r yolov5/requirements.txt"
+        try:
+            # shell 명령 실행
+            subprocess.run(command, shell=True)
+            print("requirements are ready...")
+        except Exception as e:
+            print("Error:", e)
+            
         self.setWindowTitle('CheckMate - main')
 
         # 윈도우 크기 설정
@@ -32,8 +41,6 @@ class MainWindow(QMainWindow):
         title_label.setFont(title_font)
 
         # 버튼 생성
-
-        
         self.button_data = QPushButton('DATA', self)
         self.button_data.setFixedSize(200, 100)
         self.button_data.clicked.connect(self.open_data_window)  # Connect clicked signal to open_train_window method
@@ -45,8 +52,6 @@ class MainWindow(QMainWindow):
         self.button_detect = QPushButton('DETECT', self)
         self.button_detect.setFixedSize(200, 100)
         self.button_detect.clicked.connect(self.open_detect_window)  # Connect clicked signal to open_train_window method
-
-        
 
         # 그리드 레이아웃 생성
         grid_layout = QGridLayout()
@@ -60,6 +65,7 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout)
         self.setCentralWidget(central_widget)
+        
 
     def center_window(self):
         # 현재 모니터의 가운데 좌표 계산

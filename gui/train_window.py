@@ -71,7 +71,6 @@ class TrainWindow(QDialog):
     def train_model(self):    
         # 명령 문자열
         command = f"python yolov5/train.py --data yolov5/{self.selected_model_name}/data.yaml --cfg yolov5/models/yolov5s.yaml --weights yolov5s.pt --batch 8 --epochs 100 --name {self.selected_model_name}"
-
         try:
             # shell 명령 실행
             subprocess.run(command, shell=True)
