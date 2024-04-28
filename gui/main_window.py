@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         title_label.setFont(title_font)
 
         # 버튼 생성
-        self.button_data = QPushButton('데이터', self)
+        self.button_data = QPushButton('데이터 관리', self)
         self.button_data.setFixedSize(200, 100)
         self.button_data.clicked.connect(self.open_data_window)  # Connect clicked signal to open_train_window method
 
