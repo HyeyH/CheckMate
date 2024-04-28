@@ -2,20 +2,21 @@ import subprocess
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QFileDialog, QComboBox
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
-import sys
+import sys, os
 
 
 class ImageRecognitionDialog(QDialog):
     # 시그널 선언
     file_selected = pyqtSignal(str)
+    detect_requested = pyqtSignal()
 
     def __init__(self):
         super().__init__()
-
-        self.setWindowTitle('Image Recognition')
+        self.resize(400, 600)
+        self.setWindowTitle('이미지 인식')
 
         # 파일 업로드 버튼 생성
-        upload_button = QPushButton("Upload", self)
+        upload_button = QPushButton("업로드", self)
         upload_button.clicked.connect(self.upload_image)
           
         # 선택된 파일의 경로를 표시할 QLabel 생성
@@ -24,16 +25,17 @@ class ImageRecognitionDialog(QDialog):
 
         # 수직 레이아웃 생성하여 위젯 추가
         layout = QVBoxLayout()
-        layout.addWidget(upload_button)
         layout.addWidget(self.file_path_label, alignment=Qt.AlignCenter)
+        layout.addWidget(upload_button)
 
         # 다이얼로그에 레이아웃 설정
         self.setLayout(layout)
 
         # 탐지 버튼 생성
-        self.detect_button = QPushButton("Detect", self)
+        self.detect_button = QPushButton("탐지", self)
         self.detect_button.clicked.connect(self.detect_objects)
-        self.detect_button.hide()
+        self.detect_button.hide()        
+        layout.addWidget(self.detect_button)
 
     def upload_image(self):
         file_dialog = QFileDialog(self)
@@ -41,20 +43,19 @@ class ImageRecognitionDialog(QDialog):
         file_dialog.setViewMode(QFileDialog.Detail)
         if file_dialog.exec_():
             file_path = file_dialog.selectedFiles()[0]
-            self.file_path_label.setText("Selected file: " + file_path)
+            self.file_path_label.setText("선택된 파일: " + file_path)
             self.file_selected.emit(file_path)  # 파일 경로를 부모 다이얼로그로 전달하는 시그널 발생
             self.detect_button.show()  # 파일 선택 시 탐지 버튼을 표시함
 
     def detect_objects(self):
         # 탐지 버튼을 누르면 탐지 작업을 수행함
-        self.file_selected.emit(self.file_path_label.text().replace("Selected file: ", ""))
-
+        self.detect_requested.emit()
 
 class DetectWindow(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('CheckMate - detect')
+        self.setWindowTitle('체크메이트-불량 탐지')
 
         # 윈도우 크기 설정
         self.resize(800, 600)
@@ -63,33 +64,33 @@ class DetectWindow(QDialog):
         self.center_window()
 
         # 제목 레이블 생성
-        title_label = QLabel('DETECT', self)
+        title_label = QLabel('탐지', self)
         title_label.setFont(QFont("Arial", 20, QFont.Bold))
 
         # 홈 버튼 생성
         home_button = QPushButton(self)
-        home_button.setIcon(QIcon("home.png"))  # 홈 아이콘 설정
+        home_button.setIcon(QIcon("gui/home.png"))  # 홈 아이콘 설정
         home_button.clicked.connect(self.go_home)  # 홈 버튼 클릭 시 go_home 메서드 호출
         home_button.setStyleSheet("border: none;")
 
         # 콤보박스 생성
         self.model_combo_box = QComboBox(self)
-        self.model_combo_box.addItem("Model 1")
-        self.model_combo_box.addItem("Model 2")
-        self.model_combo_box.addItem("Model 3")
+        items_path = "data"
+        items_dir = [d for d in os.listdir(items_path) if os.path.isdir(os.path.join(items_path, d))]
+        self.model_combo_box.addItems(items_dir)
 
         # 이미지 인식 버튼 생성
-        self.image_recognition_button = QPushButton("Image Recognition", self)
+        self.image_recognition_button = QPushButton("이미지 인식", self)
         self.image_recognition_button.clicked.connect(self.image_recognition)
 
         # 영상 인식 테스트 버튼 생성
-        self.live_recognition_button = QPushButton("Test Live Video Recognition", self)
+        self.live_recognition_button = QPushButton("실시간 영상 인식", self)
         self.live_recognition_button.clicked.connect(self.live_recognition)
 
         # 수직 레이아웃 생성하여 위젯 추가
         layout = QVBoxLayout()
+        layout.addWidget(home_button, alignment=Qt.AlignLeft)
         layout.addWidget(title_label, alignment=Qt.AlignCenter)
-        layout.addWidget(home_button)
         layout.addWidget(self.model_combo_box, alignment=Qt.AlignCenter)
         layout.addStretch()  # 수직 방향으로 공간을 최대한 늘림
         layout.addWidget(self.image_recognition_button, alignment=Qt.AlignCenter)
@@ -98,9 +99,9 @@ class DetectWindow(QDialog):
         # 다이얼로그에 레이아웃 설정
         self.setLayout(layout)
 
-        # 이미지 업로드 다이얼로그 생성
+        # # 이미지 업로드 다이얼로그 생성
         self.image_dialog = ImageRecognitionDialog()
-        self.image_dialog.file_selected.connect(self.detect)
+        self.image_dialog.detect_requested.connect(self.detect)
 
     def go_home(self):
         self.close()
@@ -122,7 +123,7 @@ class DetectWindow(QDialog):
         print("Testing live video recognition...")
     
     def detect(self):
-        file_path = self.image_dialog.file_path_label.text().replace("Selected file: ", "")
+        file_path = self.image_dialog.file_path_label.text().replace("선택된 파일: ", "")
         command = f"python ./yolov5/detect.py --weights ./yolov5/runs/train/{self.model_combo_box.currentText()}/weights/best.pt --conf 0.5 --source {file_path}"
         try:
             # shell 명령 실행

@@ -1,14 +1,14 @@
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QHBoxLayout, QComboBox, QLineEdit, QGridLayout, QWidget, QAction, QToolBar, QFileDialog
 from PyQt5.QtGui import QFont, QFontMetrics, QIcon
 from PyQt5.QtCore import Qt
-import sys, subprocess
+import sys, subprocess, os
 
 
 class TrainWindow(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('CheckMate - train')
+        self.setWindowTitle('체크메이트-물품 훈련')
 
         # 윈도우 크기 설정
         self.resize(800, 600)
@@ -18,18 +18,24 @@ class TrainWindow(QDialog):
 
         # 버튼 생성
         home_button = QPushButton(self)
-        home_button.setIcon(QIcon("home.png"))  # 그림 파일 경로를 지정하여 아이콘 설정
+        home_button.setIcon(QIcon("gui/home.png"))  # 그림 파일 경로를 지정하여 아이콘 설정
         home_button.clicked.connect(self.close)  # 윈도우를 닫는 버튼
         home_button.setStyleSheet("border: none;")
 
         # 제목 레이블 생성
-        self.title_label = QLabel('TRAIN')
+        self.title_label = QLabel('모델 훈련')
         self.title_font = QFont("Arial", 20, QFont.Bold)
         self.title_label.setFont(self.title_font)
 
+        self.subtitle_label = QLabel('체크메이트 사용을 위한 물품 훈련을 위한 창입니다.\n해당 창에서 데이터셋을 이용하여 모델을 훈련 시킬 수 있습니다.')
+        self.subtitle_font = QFont("Arial", 10, QFont.Normal)
+        self.subtitle_label.setFont(self.subtitle_font)
+
         # 콤보박스 생성
         self.model_combo_box = QComboBox()
-        self.model_combo_box.addItems(['Lipstick', 'Milk', 'Figure', 'Logo'])
+        items_path = "data"
+        items_dir = [d for d in os.listdir(items_path) if os.path.isdir(os.path.join(items_path, d))]
+        self.model_combo_box.addItems(items_dir)
         self.selected_model_name = self.model_combo_box.currentText()
 
         # 모델 훈련 버튼 생성

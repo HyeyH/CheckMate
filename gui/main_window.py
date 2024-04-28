@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print("Error:", e)
             
-        self.setWindowTitle('CheckMate - main')
+        self.setWindowTitle('체크메이트-메인')
 
         # 윈도우 크기 설정
         self.resize(800, 600)
@@ -31,32 +31,31 @@ class MainWindow(QMainWindow):
         self.toolbar = self.addToolBar('Main Toolbar')
         
         # 홈 액션 추가
-        self.home_action = QAction(QIcon("home.png"), 'Home', self)
+        self.home_action = QAction(QIcon("gui/home.png"), 'Home', self)
         self.home_action.triggered.connect(self.go_home)
         self.toolbar.addAction(self.home_action)
 
         # 제목 레이블 생성
-        title_label = QLabel('CheckMate', self)
+        title_label = QLabel('체크메이트', self)
         title_font = QFont("Arial", 20, QFont.Bold)
         title_label.setFont(title_font)
 
         # 버튼 생성
-        self.button_data = QPushButton('DATA', self)
+        self.button_data = QPushButton('데이터', self)
         self.button_data.setFixedSize(200, 100)
         self.button_data.clicked.connect(self.open_data_window)  # Connect clicked signal to open_train_window method
 
-        self.button_train = QPushButton('TRAIN', self)
+        self.button_train = QPushButton('모델 훈련', self)
         self.button_train.setFixedSize(200, 100)
         self.button_train.clicked.connect(self.open_train_window)  # Connect clicked signal to open_train_window method
 
-        self.button_detect = QPushButton('DETECT', self)
+        self.button_detect = QPushButton('불량 탐지', self)
         self.button_detect.setFixedSize(200, 100)
         self.button_detect.clicked.connect(self.open_detect_window)  # Connect clicked signal to open_train_window method
 
         # 그리드 레이아웃 생성
         grid_layout = QGridLayout()
-        grid_layout.addWidget(title_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)  # 제목 레이블 가운데 정렬
-        
+        grid_layout.addWidget(title_label, 0, 1, alignment=Qt.AlignCenter)  # 제목 레이블 가운데 정렬
         grid_layout.addWidget(self.button_data, 1, 0, alignment=Qt.AlignCenter)  # 버튼 가운데 정렬
         grid_layout.addWidget(self.button_train, 1, 1, alignment=Qt.AlignCenter)  # 버튼 가운데 정렬
         grid_layout.addWidget(self.button_detect, 1, 2, alignment=Qt.AlignCenter)  # 버튼 가운데 정렬
