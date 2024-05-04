@@ -4,10 +4,19 @@ from PyQt5.QtCore import Qt
 import sys, subprocess, os
 
 
-class TrainWindow(QDialog):
+class TrainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        # 필요한 종속성 설치
+        command = "pip install -r yolov5/requirements.txt"
+        try:
+            subprocess.run(command, shell=True)
+            print("필수 요소가 준비되었습니다...")
+        except Exception as e:
+            print("에러:", e)
+
+            
         self.setWindowTitle('체크메이트-물품 훈련')
 
         # 윈도우 크기 설정
@@ -39,12 +48,12 @@ class TrainWindow(QDialog):
         self.selected_model_name = self.model_combo_box.currentText()
 
         # 모델 훈련 버튼 생성
-        self.train_model_button = QPushButton('모델 훈련')
-        self.train_model_button.clicked.connect(self.train_model)
+        self.yolo_train_button = QPushButton('YOLO 훈련')
+        self.yolo_train_button.clicked.connect(self.train_model)
 
         # 모델 삭제 버튼 생성
-        self.delete_model_button = QPushButton('모델 삭제')
-        self.delete_model_button.clicked.connect(self.delete_model)
+        self.autoencoder_train_button = QPushButton('오토인코더 훈련')
+        self.autoencoder_train_button.clicked.connect(self.delete_model)
 
         # 모델 내보내기 버튼 생성
         self.export_model_button = QPushButton('모델 내보내기')
@@ -64,8 +73,8 @@ class TrainWindow(QDialog):
         main_layout.addWidget(self.model_combo_box)
         
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self.train_model_button)
-        button_layout.addWidget(self.delete_model_button)
+        button_layout.addWidget(self.yolo_train_button)
+        button_layout.addWidget(self.autoencoder_train_button)
         main_layout.addLayout(button_layout)
 
         # 모델 내보내기 및 불러오기 버튼 추가

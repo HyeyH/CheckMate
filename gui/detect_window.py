@@ -1,6 +1,6 @@
 import subprocess
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QFileDialog, QComboBox
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 import sys, os
 
@@ -11,6 +11,15 @@ class ImageRecognitionDialog(QDialog):
     detect_requested = pyqtSignal()
 
     def __init__(self):
+        
+        # 필요한 종속성 설치
+        command = "pip install -r yolov5/requirements.txt"
+        try:
+            subprocess.run(command, shell=True)
+            print("필수 요소가 준비되었습니다...")
+        except Exception as e:
+            print("에러:", e)
+            
         super().__init__()
         self.resize(400, 600)
         self.setWindowTitle('이미지 인식')
@@ -23,10 +32,16 @@ class ImageRecognitionDialog(QDialog):
         self.file_path_label = QLabel(self)
         self.file_path_label.setWordWrap(True)
 
+        # 이미지를 표시할 QLabel 생성
+        self.image_label = QLabel(self)
+        self.image_label.setAlignment(Qt.AlignCenter)
+        self.image_label.setScaledContents(True)
+
         # 수직 레이아웃 생성하여 위젯 추가
         layout = QVBoxLayout()
         layout.addWidget(self.file_path_label, alignment=Qt.AlignCenter)
         layout.addWidget(upload_button)
+        layout.addWidget(self.image_label)
 
         # 다이얼로그에 레이아웃 설정
         self.setLayout(layout)
@@ -45,12 +60,17 @@ class ImageRecognitionDialog(QDialog):
             file_path = file_dialog.selectedFiles()[0]
             self.file_path_label.setText("선택된 파일: " + file_path)
             self.file_selected.emit(file_path)  # 파일 경로를 부모 다이얼로그로 전달하는 시그널 발생
+            
+            # 이미지를 QLabel에 표시
+            pixmap = QPixmap(file_path)
+            self.image_label.setPixmap(pixmap)
+            self.image_label.adjustSize()
+
             self.detect_button.show()  # 파일 선택 시 탐지 버튼을 표시함
 
     def detect_objects(self):
         # 탐지 버튼을 누르면 탐지 작업을 수행함
         self.detect_requested.emit()
-
 class DetectWindow(QDialog):
     def __init__(self):
         super().__init__()
