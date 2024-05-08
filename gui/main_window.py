@@ -8,29 +8,13 @@ from data_window import DataWindow
 import sys
 
 class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+    def setUI(self):
         self.setWindowTitle('체크메이트-메인')
         self.resize(800, 600)
         self.center_window()
-
-        # 툴바 추가
-        self.toolbar = self.addToolBar('Main Toolbar')
-
-        # 홈 액션 추가
-        self.home_action = QAction(QIcon("gui/home.png"), '홈', self)
-        self.home_action.triggered.connect(self.go_home)
-        self.toolbar.addAction(self.home_action)
-
-        # 제목 레이블 및 사용자 정의 폰트 추가
-        title_label = QLabel('체크메이트', self)
-        font_id = QFontDatabase.addApplicationFont("SUITE-Regular.ttf")  # "path/to/SUITE-Regular.ttf"를 실제 파일 경로로 대체해주세요
-        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        title_font = QFont(font_family)
-        title_font.setPointSize(20)
-        title_font.setBold(True)
-        title_label.setFont(title_font)
-
+        font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
+        self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        
         # 버튼 추가
         self.button_data = QPushButton('데이터 관리', self)
         self.button_data.clicked.connect(self.open_data_window)
@@ -45,15 +29,41 @@ class MainWindow(QMainWindow):
         self.set_button_style(self.button_detect)
 
         # 수직 레이아웃 생성 및 버튼 추가
-        button_layout = QVBoxLayout()
-        button_layout.addWidget(self.button_data)  
-        button_layout.addWidget(self.button_train)
-        button_layout.addWidget(self.button_detect)
+        self.button_layout = QVBoxLayout()
+        self.button_layout.addWidget(self.button_data)  
+        self.button_layout.addWidget(self.button_train)
+        self.button_layout.addWidget(self.button_detect)
+    
+    def __init__(self):
+        super().__init__()
+        self.setUI()
+        # 필요한 종속성 설치
+        command = "pip install -r yolov5/requirements.txt"
+        try:
+            subprocess.run(command, shell=True)
+            print("필수 요소가 준비되었습니다...")
+        except Exception as e:
+            print("에러:", e)
+        self.train_window = None
+        self.data_window = None
+        self.detect_window = None
+        # 제목 레이블 및 사용자 정의 폰트 추가
+        title_label = QLabel('체크메이트', self)
+        title_font = QFont(self.font_family)
+        title_font.setPointSize(20)
+        title_font.setBold(True)
+        title_label.setFont(title_font)
 
-        # 수평 레이아웃 생성 및 타이틀 레이블과 버튼 레이아웃 추가
+        # 수평 레이아웃 생성 및 버튼 레이아웃과 타이틀 레이블 추가
         hbox_layout = QHBoxLayout()
-        hbox_layout.addLayout(button_layout)
-        hbox_layout.addWidget(title_label)  
+        hbox_layout.addLayout(self.button_layout)  # 버튼 레이아웃 추가
+        hbox_layout.addWidget(title_label)
+        hbox_layout.addStretch(1)  # 타이틀 레이블을 오른쪽으로 밀어냄
+
+        # 중앙 위젯 생성
+        central_widget = QWidget()
+        central_widget.setLayout(hbox_layout)
+        self.setCentralWidget(central_widget)
 
         # 중앙 위젯 생성
         central_widget = QWidget()
@@ -69,32 +79,17 @@ class MainWindow(QMainWindow):
         # 윈도우의 가운데 좌표 설정
         self.move(center_x - self.width() // 2, center_y - self.height() // 2)
 
-    def go_home(self):
-        self.show()
-
     def open_data_window(self):
-        self.hide()
-        self.data_window = DataWindow()
-        self.data_window.exec()
-        self.move(self.data_window.last_position)
-        self.resize(self.data_window.last_size)
-        self.show()
+        self.data_window = DataWindow(self)
+        self.data_window.show()
 
     def open_train_window(self):
-        self.hide()
-        self.train_window = TrainWindow()
-        self.train_window.exec()
-        self.move(self.train_window.last_position)
-        self.resize(self.train_window.last_size)
-        self.show()
+        self.train_window = TrainWindow(self)
+        self.train_window.show()
 
     def open_detect_window(self):
-        self.hide()
-        self.detect_window = DetectWindow()
-        self.detect_window.exec()
-        self.move(self.detect_window.last_position)
-        self.resize(self.detect_window.last_size)
-        self.show()
+        self.detect_window = DetectWindow(self)
+        self.detect_window.show()
 
     def set_button_style(self, button):
         button.setStyleSheet("""
@@ -104,7 +99,11 @@ class MainWindow(QMainWindow):
                 color: black;
                 font-size: 16px;
                 text-align: left;
-                padding-left: 20px;  /* 왼쪽 여백 설정 */
+                padding-left: 15px;  /* 왼쪽 여백 설정 */
+                padding-right: 15px; /* 오른쪽 여백 설정 */
+                font-family: "SUITE";
+                width: 100px;
+                height: 80px;
             }
             QPushButton:hover {
                 background-color: rgba(0, 0, 0, 0.1);  /* 마우스 호버 시 배경색 변경 */

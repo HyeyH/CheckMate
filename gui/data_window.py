@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QTreeView, QFileSystemModel, QMessageBox, QFileDialog, QDialogButtonBox
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QTreeView, QFileSystemModel, QMessageBox, QFileDialog, QDialogButtonBox
+from PyQt5.QtGui import QFont, QIcon, QFontDatabase
 from PyQt5.QtCore import Qt, QDir
 import sys, os
 import subprocess
@@ -8,15 +8,34 @@ import yaml
 
 
 class DataWindow(QDialog):
-    def __init__(self):
-        super().__init__()
-
+    def setUI(self, MainWindow):
+        self.main_window = MainWindow
         self.setWindowTitle('체크메이트-데이터 관리')
         self.resize(800, 600)
-
-        # 윈도우를 화면 가운데에 위치시키기
         self.center_window()
+        font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
+        self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        
+        # 버튼 추가
+        self.button_data = QPushButton('데이터 관리', self)
+        self.main_window.set_button_style(self.button_data)
 
+        self.button_train = QPushButton('모델 훈련', self)
+        self.button_train.clicked.connect(self.main_window.open_train_window)
+        self.main_window.set_button_style(self.button_train)
+
+        self.button_detect = QPushButton('불량 탐지', self)
+        self.button_detect.clicked.connect(self.main_window.open_detect_window)
+        self.main_window.set_button_style(self.button_detect)
+
+        # 수직 레이아웃 생성 및 버튼 추가
+        self.button_layout = QVBoxLayout()
+        self.button_layout.addWidget(self.button_data)  
+        self.button_layout.addWidget(self.button_train)
+        self.button_layout.addWidget(self.button_detect)
+    def __init__(self, MainWindow):
+        super().__init__()
+        self.setUI(MainWindow)
         # 버튼 생성
         home_button = QPushButton(self)
         home_button.setIcon(QIcon("gui/home.png"))  # 그림 파일 경로를 지정하여 아이콘 설정
@@ -26,12 +45,12 @@ class DataWindow(QDialog):
 
         # 제목 레이블 생성
         self.title_label = QLabel('데이터')
-        self.title_font = QFont("Arial", 20, QFont.Bold)
+        self.title_font = QFont(self.font_family, 20, QFont.Bold)
         self.title_label.setFont(self.title_font)
 
         # 부제목 레이블 생성
         self.subtitle_label = QLabel('체크메이트 사용을 위한 데이터셋 관리를 위한 창입니다.\n해당 창에서 추가한 데이터셋과 라벨링한 데이터셋을 통해 체크메이트를 학습 시킬 수 있습니다.')
-        self.subtitle_font = QFont("Arial", 10, QFont.Normal)
+        self.subtitle_font = QFont(self.font_family, 10, QFont.Normal)
         self.subtitle_label.setFont(self.subtitle_font)
 
         self.tree_view = QTreeView()
@@ -66,7 +85,11 @@ class DataWindow(QDialog):
         main_layout.addWidget(self.add_button)
         main_layout.addWidget(self.label_button)
 
-        self.setLayout(main_layout)
+        hbox_layout = QHBoxLayout()
+        hbox_layout.addLayout(self.button_layout)
+        hbox_layout.addLayout(main_layout)
+        self.setLayout(hbox_layout)
+
     def save_yaml_file(self, file_path, data):
         with open(file_path, 'w') as file:
             yaml.dump(data, file)
@@ -182,8 +205,8 @@ class DataWindow(QDialog):
         self.move(center_x - self.width() // 2, center_y - self.height() // 2)
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = DataWindow()
-    window.show()
-    sys.exit(app.exec_())
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     window = DataWindow()
+#     window.show()
+#     sys.exit(app.exec_())

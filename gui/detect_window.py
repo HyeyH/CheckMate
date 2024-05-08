@@ -1,6 +1,6 @@
 import subprocess
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QPushButton, QFileDialog, QComboBox
-from PyQt5.QtGui import QIcon, QFont, QPixmap
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QComboBox
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QFontDatabase
 from PyQt5.QtCore import Qt, pyqtSignal
 import sys, os
 
@@ -11,15 +11,6 @@ class ImageRecognitionDialog(QDialog):
     detect_requested = pyqtSignal()
 
     def __init__(self):
-        
-        # 필요한 종속성 설치
-        command = "pip install -r yolov5/requirements.txt"
-        try:
-            subprocess.run(command, shell=True)
-            print("필수 요소가 준비되었습니다...")
-        except Exception as e:
-            print("에러:", e)
-            
         super().__init__()
         self.resize(400, 600)
         self.setWindowTitle('이미지 인식')
@@ -72,26 +63,46 @@ class ImageRecognitionDialog(QDialog):
         # 탐지 버튼을 누르면 탐지 작업을 수행함
         self.detect_requested.emit()
 class DetectWindow(QDialog):
-    def __init__(self):
-        super().__init__()
+    def setUI(self, MainWindow):
 
+        self.main_window = MainWindow
         self.setWindowTitle('체크메이트-불량 탐지')
-
-        # 윈도우 크기 설정
         self.resize(800, 600)
-
-        # 윈도우를 화면 가운데에 위치시키기
         self.center_window()
+        font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
+        self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        
+        # 버튼 추가
+        self.button_data = QPushButton('데이터 관리', self)
+        self.button_data.clicked.connect(self.main_window.open_data_window)
+        self.main_window.set_button_style(self.button_data)
 
+        self.button_train = QPushButton('모델 훈련', self)
+        self.button_train.clicked.connect(self.main_window.open_train_window)
+        self.main_window.set_button_style(self.button_train)
+
+        self.button_detect = QPushButton('불량 탐지', self)
+        self.main_window.set_button_style(self.button_detect)
+
+        # 수직 레이아웃 생성 및 버튼 추가
+        self.button_layout = QVBoxLayout()
+        self.button_layout.addWidget(self.button_data)  
+        self.button_layout.addWidget(self.button_train)
+        self.button_layout.addWidget(self.button_detect)
+
+    def __init__(self, MainWindow):
+        super().__init__()
+        self.setUI(MainWindow)
         # 제목 레이블 생성
-        title_label = QLabel('탐지', self)
-        title_label.setFont(QFont("Arial", 20, QFont.Bold))
+        title_label = QLabel('불량 탐지', self)
+        title_label.setFont(QFont(self.font_family, 20, QFont.Bold))
 
         # 홈 버튼 생성
         home_button = QPushButton(self)
         home_button.setIcon(QIcon("gui/home.png"))  # 홈 아이콘 설정
         home_button.clicked.connect(self.go_home)  # 홈 버튼 클릭 시 go_home 메서드 호출
-        home_button.setStyleSheet("border: none;")
+        home_button.setStyleSheet("border: none;")        
+        home_button.setToolTip("홈으로")
 
         # 콤보박스 생성
         self.model_combo_box = QComboBox(self)
@@ -117,7 +128,10 @@ class DetectWindow(QDialog):
         layout.addWidget(self.live_recognition_button, alignment=Qt.AlignCenter)
 
         # 다이얼로그에 레이아웃 설정
-        self.setLayout(layout)
+        hbox_layout = QHBoxLayout()
+        hbox_layout.addLayout(self.button_layout)
+        hbox_layout.addLayout(layout)
+        self.setLayout(hbox_layout)
 
         # # 이미지 업로드 다이얼로그 생성
         self.image_dialog = ImageRecognitionDialog()
@@ -158,8 +172,8 @@ class DetectWindow(QDialog):
         self.last_size = self.size()
         super().closeEvent(event)
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = DetectWindow()
-    window.show()
-    sys.exit(app.exec_())
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     window = DetectWindow()
+#     window.show()
+#     sys.exit(app.exec_())
