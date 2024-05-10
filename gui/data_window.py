@@ -39,7 +39,7 @@ class DataWindow(QDialog):
         # 버튼 생성
         home_button = QPushButton(self)
         home_button.setIcon(QIcon("gui/home.png"))  # 그림 파일 경로를 지정하여 아이콘 설정
-        home_button.clicked.connect(self.close)  # 윈도우를 닫는 버튼
+        home_button.clicked.connect(self.go_home)  # 윈도우를 닫는 버튼
         home_button.setStyleSheet("border: none;")
         home_button.setToolTip("홈으로")
 
@@ -187,6 +187,7 @@ class DataWindow(QDialog):
                     QMessageBox.information(self, "Add Data", f"성공적으로 데이터가 추가되었습니다.: {selected_folder_path}")
 
     def go_home(self):
+        self.main_window.show()
         self.close()
 
     def closeEvent(self, event):

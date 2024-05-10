@@ -80,14 +80,17 @@ class MainWindow(QMainWindow):
         self.move(center_x - self.width() // 2, center_y - self.height() // 2)
 
     def open_data_window(self):
+        self.close()
         self.data_window = DataWindow(self)
         self.data_window.show()
 
     def open_train_window(self):
+        self.close()
         self.train_window = TrainWindow(self)
         self.train_window.show()
 
     def open_detect_window(self):
+        self.close()
         self.detect_window = DetectWindow(self)
         self.detect_window.show()
 

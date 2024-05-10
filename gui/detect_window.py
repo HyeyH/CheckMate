@@ -138,6 +138,7 @@ class DetectWindow(QDialog):
         self.image_dialog.detect_requested.connect(self.detect)
 
     def go_home(self):
+        self.main_window.show()
         self.close()
 
     def center_window(self):

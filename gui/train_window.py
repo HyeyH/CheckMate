@@ -39,7 +39,7 @@ class TrainWindow(QDialog):
         # 버튼 생성
         home_button = QPushButton(self)
         home_button.setIcon(QIcon("gui/home.png"))  # 그림 파일 경로를 지정하여 아이콘 설정
-        home_button.clicked.connect(self.close)  # 윈도우를 닫는 버튼
+        home_button.clicked.connect(self.go_home)  # 윈도우를 닫는 버튼
         home_button.setStyleSheet("border: none;")        
         home_button.setToolTip("홈으로")
 
@@ -139,6 +139,7 @@ class TrainWindow(QDialog):
         print("Loading model...")
 
     def go_home(self):
+        self.main_window.show()
         self.close()
     
     def closeEvent(self, event):
