@@ -12,6 +12,7 @@ class TrainWindow(QDialog):
         self.center_window()
         font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
         self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        self.setFont(QFont(self.font_family))
         
         # 버튼 추가
         self.button_data = QPushButton('데이터 관리', self)
@@ -46,11 +47,9 @@ class TrainWindow(QDialog):
         # 제목 레이블 생성
         self.title_label = QLabel('모델 훈련')
         self.title_font = QFont(self.font_family, 20, QFont.Bold)
-        self.title_label.setFont(self.title_font)
 
         self.subtitle_label = QLabel('체크메이트 사용을 위한 물품 훈련을 위한 창입니다.\n해당 창에서 데이터셋을 이용하여 모델을 훈련 시킬 수 있습니다.')
         self.subtitle_font = QFont(self.font_family, 10, QFont.Normal)
-        self.subtitle_label.setFont(self.subtitle_font)
 
         # 콤보박스 생성
         self.model_combo_box = QComboBox()
@@ -143,7 +142,7 @@ class TrainWindow(QDialog):
         self.close()
     
     def closeEvent(self, event):
-        # TrainWindow가 닫힐 때 위치와 크기 정보 저장
+        # 닫힐 때 위치와 크기 정보 저장
         self.last_position = self.pos()
         self.last_size = self.size()
         super().closeEvent(event)

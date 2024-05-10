@@ -37,13 +37,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setUI()
-        # 필요한 종속성 설치
-        command = "pip install -r yolov5/requirements.txt"
-        try:
-            subprocess.run(command, shell=True)
-            print("필수 요소가 준비되었습니다...")
-        except Exception as e:
-            print("에러:", e)
+        # # 필요한 종속성 설치
+        # # test 할 때는 주석 처리
+        # command = "pip install -r yolov5/requirements.txt"
+        # try:
+        #     subprocess.run(command, shell=True)
+        #     print("필수 요소가 준비되었습니다...")
+        # except Exception as e:
+        #     print("에러:", e)
         self.train_window = None
         self.data_window = None
         self.detect_window = None
@@ -78,6 +79,12 @@ class MainWindow(QMainWindow):
 
         # 윈도우의 가운데 좌표 설정
         self.move(center_x - self.width() // 2, center_y - self.height() // 2)
+
+    def closeEvent(self, event):
+        # 닫힐 때 위치와 크기 정보 저장
+        self.last_position = self.pos()
+        self.last_size = self.size()
+        super().closeEvent(event)
 
     def open_data_window(self):
         self.close()

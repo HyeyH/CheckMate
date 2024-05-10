@@ -9,12 +9,13 @@ class ImageRecognitionDialog(QDialog):
     # 시그널 선언
     file_selected = pyqtSignal(str)
     detect_requested = pyqtSignal()
-
     def __init__(self):
         super().__init__()
         self.resize(400, 600)
         self.setWindowTitle('이미지 인식')
-
+        font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        self.setFont(QFont(font_family))
         # 파일 업로드 버튼 생성
         upload_button = QPushButton("업로드", self)
         upload_button.clicked.connect(self.upload_image)
@@ -71,7 +72,7 @@ class DetectWindow(QDialog):
         self.center_window()
         font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
         self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        
+        self.setFont(QFont(self.font_family))
         # 버튼 추가
         self.button_data = QPushButton('데이터 관리', self)
         self.button_data.clicked.connect(self.main_window.open_data_window)
@@ -95,7 +96,6 @@ class DetectWindow(QDialog):
         self.setUI(MainWindow)
         # 제목 레이블 생성
         title_label = QLabel('불량 탐지', self)
-        title_label.setFont(QFont(self.font_family, 20, QFont.Bold))
 
         # 홈 버튼 생성
         home_button = QPushButton(self)
@@ -168,7 +168,7 @@ class DetectWindow(QDialog):
             print("Error:", e)
 
     def closeEvent(self, event):
-        # TrainWindow가 닫힐 때 위치와 크기 정보 저장
+        # 닫힐 때 위치와 크기 정보 저장
         self.last_position = self.pos()
         self.last_size = self.size()
         super().closeEvent(event)

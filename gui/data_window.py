@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QTreeView, QFileSystemModel, QMessageBox, QFileDialog, QDialogButtonBox
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QTreeView, QFileSystemModel, QMessageBox, QFileDialog, QDialogButtonBox, QRadioButton, QTextEdit
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
 from PyQt5.QtCore import Qt, QDir
 import sys, os
@@ -15,6 +15,7 @@ class DataWindow(QDialog):
         self.center_window()
         font_id = QFontDatabase.addApplicationFont("SUITE-SemiBold.ttf")  
         self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        self.setFont(QFont(self.font_family))
         
         # 버튼 추가
         self.button_data = QPushButton('데이터 관리', self)
@@ -33,6 +34,7 @@ class DataWindow(QDialog):
         self.button_layout.addWidget(self.button_data)  
         self.button_layout.addWidget(self.button_train)
         self.button_layout.addWidget(self.button_detect)
+
     def __init__(self, MainWindow):
         super().__init__()
         self.setUI(MainWindow)
@@ -46,12 +48,12 @@ class DataWindow(QDialog):
         # 제목 레이블 생성
         self.title_label = QLabel('데이터')
         self.title_font = QFont(self.font_family, 20, QFont.Bold)
-        self.title_label.setFont(self.title_font)
+
 
         # 부제목 레이블 생성
         self.subtitle_label = QLabel('체크메이트 사용을 위한 데이터셋 관리를 위한 창입니다.\n해당 창에서 추가한 데이터셋과 라벨링한 데이터셋을 통해 체크메이트를 학습 시킬 수 있습니다.')
         self.subtitle_font = QFont(self.font_family, 10, QFont.Normal)
-        self.subtitle_label.setFont(self.subtitle_font)
+
 
         self.tree_view = QTreeView()
         self.data_model = QFileSystemModel()
@@ -66,14 +68,12 @@ class DataWindow(QDialog):
         self.tree_view.setAnimated(False)
         self.tree_view.setIndentation(20)
 
-        # 데이터 추가 버튼 생성
         self.add_button = QPushButton('데이터셋 추가')
-        self.add_button.clicked.connect(self.add_data)
+        self.add_button.clicked.connect(self.open_add_data)
         self.add_button.setToolTip("물품에 대한 새로운 이미지를 추가합니다.")
 
-        # 데이터 수정 버튼 생성
         self.label_button = QPushButton('데이터셋 라벨링')
-        self.label_button.clicked.connect(self.label_data)
+        self.label_button.clicked.connect(self.open_label_data)
         self.label_button.setToolTip("추가한 데이터에 대한 라벨링을 진행합니다.")
 
         # 전체 레이아웃 생성
@@ -99,7 +99,7 @@ class DataWindow(QDialog):
             data = yaml.safe_load(file)
         return data
     
-    def label_data(self):
+    def open_label_data(self):
         parent_directory = os.path.dirname('..')
         # 현재는 exe 파일로 해 두었지만, 추후 해당 소스 수정
         exe_path = os.path.join(parent_directory, 'labelImg.exe')
@@ -136,62 +136,106 @@ class DataWindow(QDialog):
         else:
             QMessageBox.warning(self, "Error", "데이터 라벨링을 진행할 수 없습니다.")
 
+    def open_add_data(self):
+        dialog = QDialog(self)
+        dialog.setFont(QFont(self.font_family))
+        dialog.setWindowTitle("데이터 추가")
+        dialog.resize(500, 500)
+        item_label = QLabel("추가할 데이터의 이름을 영문으로 작성해 주세요. 예) eraser, milk")
+
+        self.item_name = QTextEdit()  
+        self.item_name.setFixedHeight(30)
+        item_layout = QVBoxLayout()
+        item_layout.addWidget(item_label)
+        item_layout.addWidget(self.item_name)
+
+        # 라디오버튼 생성
+        radio_label = QLabel("추가할 데이터의 종류는 정상인가요, 불량인가요?")
+
+        self.radio_good = QRadioButton("정상")
+        self.radio_bad = QRadioButton("불량")
+        radios = QHBoxLayout()
+        radios.addWidget(self.radio_good)
+        radios.addWidget(self.radio_bad)
+        radio_layout = QVBoxLayout()
+        radio_layout.addWidget(radio_label)
+        radio_layout.addLayout(radios)
+        
+        # 파일 찾기 버튼 생성
+        self.files = None
+        file_label = QLabel("추가할 데이터 파일들을 선택해 주세요.")
+        self.selected_files_label = QLabel()  # 선택된 파일 이름을 나타낼 라벨
+        file_button = QPushButton("파일 찾기")
+        file_button.clicked.connect(self.open_file_dialog)
+        file_layout = QVBoxLayout()
+        file_layout.addWidget(file_label)
+        file_layout.addWidget(self.selected_files_label)
+        file_layout.addWidget(file_button)
+        
+        # Dialog layout 생성
+        layout = QVBoxLayout()
+        layout.addLayout(item_layout)
+        layout.addSpacing(20)  # 간격 추가
+        layout.addLayout(radio_layout)
+        layout.addSpacing(20)  # 간격 추가
+        layout.addLayout(file_layout)
+        layout.addSpacing(20)  # 간격 추가
+        
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        button_box.accepted.connect(self.add_data)
+        button_box.button(QDialogButtonBox.Ok).setText("확인")
+        
+        layout.addWidget(button_box)
+        dialog.setLayout(layout)
+        
+        dialog.exec_()
+
     def add_data(self):
-        # 사용자에게 정상인지 불량인지 묻는 다이얼로그
-        reply = QMessageBox.question(self, 'Confirmation', '추가할 데이터는 정상 제품인가요?', QMessageBox.Yes | QMessageBox.No)
-
-        # 사용자가 선택한 폴더
-        selected_folder_path = None
-        folder_dialog = QFileDialog()
-        folder_dialog.setFileMode(QFileDialog.DirectoryOnly)
-        folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
-
-        # 상위 디렉토리의 data 폴더로 초기 경로 설정
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        data_directory = os.path.join(os.path.dirname(current_path), 'data')
-        folder_dialog.setDirectory(data_directory)
-
-        # 정상인 경우 선택한 폴더에 "good" 디렉터리 생성
-        if reply == QMessageBox.Yes:
-            if folder_dialog.exec_():
-                selected_folder_path = folder_dialog.selectedFiles()[0]
-                good_folder_path = os.path.join(selected_folder_path, 'images/good')
-                os.makedirs(good_folder_path, exist_ok=True)
-
-        # 불량인 경우 선택한 폴더에 "bad" 디렉터리 생성
+        # 사용자가 입력한 데이터 이름 가져오기
+        item_name_text = self.item_name.toPlainText().strip()
+        
+        if not item_name_text:
+            QMessageBox.warning(self, "경고", "데이터 이름을 입력하세요.")
+            return
+        
+        # 새 디렉터리 생성
+        directory = os.path.join('data', item_name_text)
+        os.makedirs(directory, exist_ok=True)
+        
+        # 정상 또는 불량에 따라 images/good 또는 images/bad 디렉터리 생성
+        if self.radio_good.isChecked():
+            directory = os.path.join(directory, "images", "good")
+        elif self.radio_bad.isChecked():
+            directory = os.path.join(directory, "images", "bad")
         else:
-            if folder_dialog.exec_():
-                selected_folder_path = folder_dialog.selectedFiles()[0]
-                bad_folder_path = os.path.join(selected_folder_path, 'images/bad')
-                os.makedirs(bad_folder_path, exist_ok=True)
+            QMessageBox.warning(self, "경고", "데이터 종류를 선택하세요.")
+            return
+        
+        os.makedirs(directory, exist_ok=True)
+        
+        if not self.files:
+            QMessageBox.warning(self, "경고", "추가할 데이터를 선택하세요.")
+            return
+        else:
+            # 선택된 파일들을 복사해서 해당 디렉터리로 이동
+            for file in self.files:
+                shutil.copy(file, directory)
+        
+        QMessageBox.information(self, "완료", "데이터 추가가 완료되었습니다.")
 
-        # 선택한 폴더가 있는 경우 파일을 해당 폴더로 복사
-        if selected_folder_path:
-            file_dialog = QFileDialog()
-            file_dialog.setFileMode(QFileDialog.ExistingFiles)
-            file_dialog.setViewMode(QFileDialog.List)
-
-            # 상위 디렉토리의 data 폴더로 초기 경로 설정
-            file_dialog.setDirectory(data_directory)
-
-            if file_dialog.exec_():
-                selected_files = file_dialog.selectedFiles()
-                if selected_files:
-                    for selected_file_path in selected_files:
-                        file_name = os.path.basename(selected_file_path)
-                        if reply == QMessageBox.Yes:
-                            destination_file_path = os.path.join(good_folder_path, file_name)
-                        else:
-                            destination_file_path = os.path.join(bad_folder_path, file_name)
-                        shutil.copy(selected_file_path, destination_file_path)
-                    QMessageBox.information(self, "Add Data", f"성공적으로 데이터가 추가되었습니다.: {selected_folder_path}")
+    def open_file_dialog(self):
+        options = QFileDialog.Options()
+        self.files, _ = QFileDialog.getOpenFileNames(self, "파일 선택", "", "All Files (*);;", options=options)
+        if self.files:
+            self.selected_files_label.setWordWrap(True)
+            self.selected_files_label.setText("선택된 파일: " + ", ".join(self.files))
 
     def go_home(self):
         self.main_window.show()
         self.close()
 
     def closeEvent(self, event):
-        # TrainWindow가 닫힐 때 위치와 크기 정보 저장
+        # 닫힐 때 위치와 크기 정보 저장
         self.last_position = self.pos()
         self.last_size = self.size()
         super().closeEvent(event)
