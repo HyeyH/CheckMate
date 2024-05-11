@@ -1,0 +1,23 @@
+데이터셋 추가
+- radio button dialog(물품 종류, 정상 불량, 추가 파일들 선택)
+
+데이터셋 라벨링
+- change save dir, open dir, 선택된 labels 폴더에 해당 label들을 넣어야 할 듯
+
+모델 훈련
+YOLO (모델명을 지정할 수 있는가... YOLOv5 말고도)
+- data yaml 작성, 경로 지정
+- train/val/test 폴더 지정, 비율 지정
+- test 결과 보여주기 
+
+Anomaly Detection
+얜 할 때마다 학습해야 하는지???. 얘도 모델명 지정이 가능한지?
+- data/~/images/good 에 있는 애들을 학습해라
+
+불량 탐지
+- 이미지 탐지, 물품명 모델로
+
+전체적
+- 메인 화면
+- 작업 중 로딩창
+- exe 파일로 export

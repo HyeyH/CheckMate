@@ -76,6 +76,10 @@ class DataWindow(QDialog):
         self.label_button.clicked.connect(self.open_label_data)
         self.label_button.setToolTip("추가한 데이터에 대한 라벨링을 진행합니다.")
 
+        self.ratio_button = QPushButton('데이터셋 비율 지정')
+        self.ratio_button.clicked.connect(self.open_ratio_data)
+        self.ratio_button.setToolTip("훈련을 위한 데이터셋 비율을 지정합니다.")
+
         # 전체 레이아웃 생성
         main_layout = QVBoxLayout()
         main_layout.addWidget(home_button, alignment=Qt.AlignLeft)
@@ -84,12 +88,16 @@ class DataWindow(QDialog):
         main_layout.addWidget(self.tree_view)
         main_layout.addWidget(self.add_button)
         main_layout.addWidget(self.label_button)
+        main_layout.addWidget(self.ratio_button)
 
         hbox_layout = QHBoxLayout()
         hbox_layout.addLayout(self.button_layout)
         hbox_layout.addLayout(main_layout)
         self.setLayout(hbox_layout)
 
+    def open_ratio_data(self):
+        None
+        
     def save_yaml_file(self, file_path, data):
         with open(file_path, 'w') as file:
             yaml.dump(data, file)
@@ -100,41 +108,46 @@ class DataWindow(QDialog):
         return data
     
     def open_label_data(self):
-        parent_directory = os.path.dirname('..')
-        # 현재는 exe 파일로 해 두었지만, 추후 해당 소스 수정
-        exe_path = os.path.join(parent_directory, 'labelImg.exe')
-        if os.path.exists(exe_path) and os.access(exe_path, os.X_OK):
-            subprocess.Popen([exe_path])
+        dialog = QDialog()
+        dialog.resize(400, 500)
+        
+        layout = QVBoxLayout()
+        label = QLabel("데이터를 라벨링할 물품의 이름을 하나만 입력하세요. 예) eraser")
+        layout.addWidget(label)
+        text_edit = QTextEdit()
+        layout.addWidget(text_edit)
+        button_ok = QPushButton("확인")
 
-            # 사용자가 원하는 디렉토리 선택 다이얼로그 표시
-            selected_directory = QFileDialog.getExistingDirectory(self, "Select Directory", parent_directory)
-            if selected_directory:
-                try:
-                    # train, val 디렉토리 설정 및 names 값 읽기
-                    train_directory = os.path.join(selected_directory, 'images')
-                    val_directory = os.path.join(selected_directory, 'images')
-                    labels_directory = os.path.join(selected_directory, 'labels')  # labels 디렉토리 경로
-
-                    # labels 디렉토리가 없는 경우 생성
-                    os.makedirs(labels_directory, exist_ok=True)
-
-                    names_path = os.path.join(labels_directory, 'classes.txt')
-
-                    # names 값 읽어오기
-                    with open(names_path, 'r') as file:
-                        names = {}
-                        for line in file:
-                            index, name = line.strip().split(':', 1)
-                            names[int(index)] = name.strip()
-
-                    # data 설정
-                    data = {'train': train_directory, 'val': val_directory, 'names': names, 'nc': 2}
-                    yaml_file_path = os.path.join(selected_directory, 'data.yaml')
-                    self.save_yaml_file(yaml_file_path, data)
-                except Exception as e:
-                    QMessageBox.warning(self, "Error", str(e))
+        def on_button_ok_clicked():
+            item_name = text_edit.toPlainText().strip()  # text_edit의 텍스트를 가져옴 (양쪽 공백 제거)
+            if not item_name:
+                QMessageBox.warning(self, "경고", "물품명을 입력하세요.")
+                return
+            else:
+                directory = os.path.join("data/"+item_name, 'labels')
+                os.makedirs(directory, exist_ok=True)  # 디렉터리가 이미 있으면 오류를 발생시키지 않음
+                QMessageBox.information(self, "완료", f"해당 물품명 디렉터리에 labels 폴더가 생성되었습니다.\n경로: {directory}")
+                dialog.close()
+        button_ok.clicked.connect(on_button_ok_clicked)
+        layout.addWidget(button_ok)
+        dialog.setLayout(layout)
+        dialog.exec_()
+        
+        # exe_path = os.path.join("labelImg", 'labelImg.py')
+        # if os.path.exists(exe_path) and os.access(exe_path, os.X_OK):
+        #     process = subprocess.Popen(['python', exe_path])
+        #     process.wait()
+        # else:
+        #     QMessageBox.warning(self, "Error", "데이터 라벨링을 진행할 수 없습니다.")
+                
+        exe_path = os.path.join("labelImg", 'labelImg.exe')
+        if os.path.exists(exe_path) and exe_path.endswith(".exe"):
+            # labelImg.exe 파일이 존재하고 확장자가 .exe인 경우 실행
+            process = subprocess.Popen([exe_path])
+            process.wait()
         else:
             QMessageBox.warning(self, "Error", "데이터 라벨링을 진행할 수 없습니다.")
+        
 
     def open_add_data(self):
         dialog = QDialog(self)
