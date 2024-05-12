@@ -6,6 +6,7 @@ import sys, os
 import subprocess
 import shutil
 import yaml
+from labelImg_tutorial import TutorialDialog
 
 
 class DataWindow(QDialog):
@@ -106,12 +107,12 @@ class DataWindow(QDialog):
         layout.addWidget(self.directory_combo)
         
         # 비율을 지정하기 위한 레이블과 입력 필드를 추가합니다.
-        self.ratio_label = QLabel("데이터 분할 비율을 선택해 주세요. 순서대로 train/valid/test 입니다.")
+        self.ratio_label = QLabel("데이터 분할 비율을 선택해 주세요. 순서대로 train:valid:test 입니다.")
         layout.addWidget(self.ratio_label)
 
-        self.radio_602020 = QRadioButton("60/20/20")
-        self.radio_603010 = QRadioButton("60/30/10")
-        self.radio_702010 = QRadioButton("70/20/10")
+        self.radio_602020 = QRadioButton("60:20:20")
+        self.radio_603010 = QRadioButton("60:30:10")
+        self.radio_702010 = QRadioButton("70:20:10")
         radio_layout = QHBoxLayout()
         radio_layout.addWidget(self.radio_602020)
         radio_layout.addWidget(self.radio_603010)
@@ -134,6 +135,11 @@ class DataWindow(QDialog):
 
     def split_data(self):
         directory_name = self.directory_combo.currentText()
+
+        if not directory_name:
+            QMessageBox.warning(self, "경고", "폴더를 선택하세요.")
+            return
+
         if self.radio_603010.isChecked():
             ratio_text = "60:30:10"
         elif self.radio_602020.isChecked():
@@ -143,6 +149,13 @@ class DataWindow(QDialog):
         else:
             QMessageBox.warning(self, "경고", "원하는 분할 비율을 선택하세요.")
             return
+
+        # Check if labels directory is empty
+        labels_dir = os.path.join('./data', directory_name, 'labels')
+        if not os.listdir(labels_dir):
+            QMessageBox.warning(self, "경고", "선택한 폴더의 labels 디렉터리가 비어 있습니다.")
+            return
+
         try:
             # 입력된 비율을 ':'로 분할하여 train, valid, test 비율로 나눕니다.
             ratios = ratio_text.split(':')
@@ -152,61 +165,61 @@ class DataWindow(QDialog):
             train_ratio, valid_ratio, test_ratio = map(float, ratios)
             total_ratio = train_ratio + valid_ratio + test_ratio
 
-            # './data' 디렉터리에 train, valid, test 디렉터리를 생성합니다.
+            # 디렉터리 생성
             train_dir = os.path.join('./data', directory_name, 'train')
             valid_dir = os.path.join('./data', directory_name, 'valid')
             test_dir = os.path.join('./data', directory_name, 'test')
-            os.makedirs(train_dir, exist_ok=True)
-            os.makedirs(valid_dir, exist_ok=True)
-            os.makedirs(test_dir, exist_ok=True)
 
-            # './data/{directory_name}' 디렉터리의 이미지 파일들을 무작위로 나누어 train, valid, test에 복사합니다.
-            source_dir_good = os.path.join('./data', directory_name, 'images', 'good')
-            source_dir_bad = os.path.join('./data', directory_name, 'images', 'bad')
-            filenames_good = os.listdir(source_dir_good)
-            filenames_bad = os.listdir(source_dir_bad)
+            # 이미지 및 레이블 폴더 생성
+            for directory in [train_dir, valid_dir, test_dir]:
+                os.makedirs(os.path.join(directory, 'images'), exist_ok=True)
+                os.makedirs(os.path.join(directory, 'labels'), exist_ok=True)
 
-            # good과 bad 디렉토리에 있는 파일 이름을 모두 합칩니다.
-            filenames = filenames_good + filenames_bad
-            random.shuffle(filenames)
+            # 이미지 및 레이블 파일 목록 가져오기
+            source_dir_good_images = os.path.join('./data', directory_name, 'good')
+            source_dir_labels = os.path.join('./data', directory_name, 'labels')
+            source_dir_bad_images = os.path.join('./data', directory_name, 'bad')
 
-            train_count = int(train_ratio / total_ratio * len(filenames))
-            valid_count = int(valid_ratio / total_ratio * len(filenames))
-            test_count = len(filenames) - train_count - valid_count
+            filenames_good = os.listdir(source_dir_good_images)
+            filenames_bad = os.listdir(source_dir_bad_images)
 
-            train_files = filenames[:train_count]
-            valid_files = filenames[train_count:train_count + valid_count]
-            test_files = filenames[train_count + valid_count:]
+            # 분할된 파일 수 계산
+            # 수정 필요해 보임... ㅜㅜ
+            total_good_files = len(filenames_good)
+            total_bad_files = len(filenames_bad)
 
-            for filename in train_files:
-                shutil.copy(os.path.join(source_dir_good, filename), os.path.join(train_dir, filename))
-            for filename in valid_files:
-                shutil.copy(os.path.join(source_dir_good, filename), os.path.join(valid_dir, filename))
-            for filename in test_files:
-                shutil.copy(os.path.join(source_dir_good, filename), os.path.join(test_dir, filename))
+            train_count_good = int(train_ratio / total_ratio * total_good_files)
+            valid_count_good = int(valid_ratio / total_ratio * total_good_files)
+            test_count_good = total_good_files - train_count_good - valid_count_good
 
-            for filename in train_files:
-                shutil.copy(os.path.join(source_dir_bad, filename), os.path.join(train_dir, filename))
-            for filename in valid_files:
-                shutil.copy(os.path.join(source_dir_bad, filename), os.path.join(valid_dir, filename))
-            for filename in test_files:
-                shutil.copy(os.path.join(source_dir_bad, filename), os.path.join(test_dir, filename))
+            train_count_bad = int(train_ratio / total_ratio * total_bad_files)
+            valid_count_bad = int(valid_ratio / total_ratio * total_bad_files)
+            test_count_bad = total_bad_files - train_count_bad - valid_count_bad
+
+            # 최종 분할된 파일 수는 good과 bad 중 더 작은 수를 선택하여 설정
+            train_count = min(train_count_good, train_count_bad)
+            valid_count = min(valid_count_good, valid_count_bad)
+            test_count = min(test_count_good, test_count_bad)
+
+            # 이미지 및 레이블 파일 분할
+            for directory, count in zip([train_dir, valid_dir, test_dir], [train_count, valid_count, test_count]):
+                for filename in filenames_good[:count]:
+                    # good 이미지와 레이블 파일 복사
+                    shutil.copy(os.path.join(source_dir_good_images, filename), os.path.join(directory, 'images', filename))
+                    shutil.copy(os.path.join(source_dir_labels, filename.replace('.jpg', '.txt')), os.path.join(directory, 'labels', filename.replace('.jpg', '.txt')))
                 
+                for filename in filenames_bad[:count]:
+                    # bad 이미지와 레이블 파일 복사
+                    shutil.copy(os.path.join(source_dir_bad_images, filename), os.path.join(directory, 'images', filename))
+                    shutil.copy(os.path.join(source_dir_labels, filename.replace('.jpg', '.txt')), os.path.join(directory, 'labels', filename.replace('.jpg', '.txt')))
+                
+                filenames_good = filenames_good[count:]
+                filenames_bad = filenames_bad[count:]
+
             QMessageBox.information(self, "완료", "데이터 분할이 완료되었습니다.")
-
         except Exception as e:
-            QMessageBox.warning(self, "Error", str(e))
-            return
+            print("에러:", e)
         
-
-    def save_yaml_file(self, file_path, data):
-        with open(file_path, 'w') as file:
-            yaml.dump(data, file)
-
-    def load_yaml_file(file_path):
-        with open(file_path, 'r') as file:
-            data = yaml.safe_load(file)
-        return data
     
     def open_label_data(self):
         dialog = QDialog()
@@ -215,31 +228,33 @@ class DataWindow(QDialog):
         label = QLabel("데이터를 라벨링할 물품의 이름을 하나만 입력하세요. 예) eraser")
         layout.addWidget(label)
         text_edit = QTextEdit()
+        text_edit.setFixedHeight(30)
         layout.addWidget(text_edit)
         button_ok = QPushButton("확인")
 
         def on_button_ok_clicked():
-            item_name = text_edit.text().strip()  # text_edit의 텍스트를 가져옴 (양쪽 공백 제거)
+            item_name = text_edit.toPlainText().strip()  # text_edit의 텍스트를 가져옴 (양쪽 공백 제거)
             if not item_name:
                 QMessageBox.warning(self, "경고", "물품명을 입력하세요.")
                 return
             else:
-                image_directory = os.path.join("data", item_name, "images")
+                image_directory = os.path.join("data", item_name)
                 good_directory = os.path.join(image_directory, "good")
                 bad_directory = os.path.join(image_directory, "bad")
-                
                 # good 디렉터리가 존재하고 비어 있지 않은지 확인
-                if os.path.exists(good_directory) and os.listdir(good_directory):
-                    QMessageBox.information(self, "확인", "Good 디렉터리에 이미지가 있습니다.")
-                    dialog.close()
+                if os.path.exists(good_directory):
+                    if not os.listdir(good_directory):
+                        QMessageBox.warning(self, "경고", "Good 디렉터리에 이미지가 있어야 합니다.")
+                        return
+
                 # bad 디렉터리가 존재하고 비어 있지 않은지 확인
-                elif os.path.exists(bad_directory) and os.listdir(bad_directory):
-                    QMessageBox.information(self, "확인", "Bad 디렉터리에 이미지가 있습니다.")
-                    dialog.close()
-                else:
-                    QMessageBox.warning(self, "경고", "Good 또는 Bad 디렉터리에 이미지가 있어야 합니다.")
-                    return
-                    
+                if os.path.exists(bad_directory):
+                    if not os.listdir(bad_directory):
+                        QMessageBox.warning(self, "경고", "Bad 디렉터리에 이미지가 있어야 합니다.")
+                        return
+                QMessageBox.information(self, "라벨링 가능", "해당 물품은 라벨링이 가능합니다.")
+                os.makedirs(os.path.join(image_directory, "labels"), exist_ok=True)
+                dialog.close()
         button_ok.clicked.connect(on_button_ok_clicked)
         layout.addWidget(button_ok)
         dialog.setLayout(layout)
@@ -255,6 +270,8 @@ class DataWindow(QDialog):
         if os.path.exists(exe_path) and exe_path.endswith(".exe"):
             # labelImg.exe 파일이 존재하고 확장자가 .exe인 경우 실행
             process = subprocess.Popen([exe_path])
+            tutorial_dialog = TutorialDialog()
+            tutorial_dialog.exec_()
             process.wait()
         else:
             QMessageBox.warning(self, "Error", "데이터 라벨링을 진행할 수 없습니다.")

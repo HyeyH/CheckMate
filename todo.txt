@@ -4,6 +4,9 @@
 데이터셋 라벨링
 - change save dir, open dir, 선택된 labels 폴더에 해당 label들을 넣어야 할 듯
 
+데이터셋 관리
+- 데이터셋 초기화? 필요하려나... 그리고 yaml 파일 어떻게 할 지 고민해 봐야 함..
+
 모델 훈련
 YOLO (모델명을 지정할 수 있는가... YOLOv5 말고도)
 - data yaml 작성, 경로 지정
@@ -21,3 +24,5 @@ Anomaly Detection
 - 메인 화면
 - 작업 중 로딩창
 - exe 파일로 export
+- 예외 처리
+- 매뉴얼
