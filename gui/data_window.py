@@ -197,9 +197,9 @@ class DataWindow(QDialog):
             test_count_bad = total_bad_files - train_count_bad - valid_count_bad
 
             # 최종 분할된 파일 수는 good과 bad 중 더 작은 수를 선택하여 설정
-            train_count = min(train_count_good, train_count_bad)
-            valid_count = min(valid_count_good, valid_count_bad)
-            test_count = min(test_count_good, test_count_bad)
+            train_count = train_count_good + train_count_bad
+            valid_count = valid_count_good + valid_count_bad
+            test_count = test_count_good + test_count_bad
 
             # 이미지 및 레이블 파일 분할
             for directory, count in zip([train_dir, valid_dir, test_dir], [train_count, valid_count, test_count]):
@@ -246,15 +246,15 @@ class DataWindow(QDialog):
                     if not os.listdir(good_directory):
                         QMessageBox.warning(self, "경고", "Good 디렉터리에 이미지가 있어야 합니다.")
                         return
-
                 # bad 디렉터리가 존재하고 비어 있지 않은지 확인
-                if os.path.exists(bad_directory):
+                elif os.path.exists(bad_directory):
                     if not os.listdir(bad_directory):
                         QMessageBox.warning(self, "경고", "Bad 디렉터리에 이미지가 있어야 합니다.")
                         return
-                QMessageBox.information(self, "라벨링 가능", "해당 물품은 라벨링이 가능합니다.")
-                os.makedirs(os.path.join(image_directory, "labels"), exist_ok=True)
-                dialog.close()
+                else:
+                    QMessageBox.information(self, "라벨링 가능", "해당 물품은 라벨링이 가능합니다.")
+                    os.makedirs(os.path.join(image_directory, "labels"), exist_ok=True)
+                    dialog.close()
         button_ok.clicked.connect(on_button_ok_clicked)
         layout.addWidget(button_ok)
         dialog.setLayout(layout)
